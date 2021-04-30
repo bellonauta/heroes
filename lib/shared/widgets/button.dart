@@ -10,20 +10,34 @@ class ButtonWidget extends StatelessWidget {
   final VoidCallback onTap;
 
   ButtonWidget(
-      {required this.label,
-      required this.backgroundColor,
-      required this.fontColor,
-      required this.borderColor,
-      required this.onTap});
+      {this.label,
+      this.backgroundColor,
+      this.fontColor,
+      this.borderColor,
+      this.onTap});
 
-  ButtonWidget.confirm({required String label, required VoidCallback onTap})
+  ButtonWidget.confirm({String label = 'Confirmar', VoidCallback onTap})
       : this.backgroundColor = AppColors.darkGreen,
         this.fontColor = AppColors.white,
         this.borderColor = AppColors.green,
         this.onTap = onTap,
         this.label = label;
 
-  ButtonWidget.cancel({required String label, required VoidCallback onTap})
+  ButtonWidget.cancel({String label = 'Cancelar', VoidCallback onTap})
+      : this.backgroundColor = AppColors.purple,
+        this.fontColor = AppColors.white,
+        this.borderColor = AppColors.green,
+        this.onTap = onTap,
+        this.label = label;
+
+  ButtonWidget.insert({String label = 'Incluir', VoidCallback onTap})
+      : this.backgroundColor = AppColors.darkGreen,
+        this.fontColor = AppColors.white,
+        this.borderColor = AppColors.green,
+        this.onTap = onTap,
+        this.label = label;
+
+  ButtonWidget.figth({String label = 'Combate', VoidCallback onTap})
       : this.backgroundColor = AppColors.purple,
         this.fontColor = AppColors.white,
         this.borderColor = AppColors.green,

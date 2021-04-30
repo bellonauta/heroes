@@ -15,7 +15,7 @@ class HomeRepos {
     final List response = [
       {
         "id": 1,
-        "nome": 'Jaum',
+        "nome": 'Jaum da Silva Xavier Santos',
         'photoUrl': "",
         'universo': 'MARVEL',
         'altura': 1.70,
@@ -24,7 +24,7 @@ class HomeRepos {
       },
       {
         "id": 2,
-        "nome": 'Pedro',
+        "nome": 'Pedro Paulo Pereira Pérez',
         'photoUrl': "",
         'universo': 'MARVEL',
         'altura': 1.70,

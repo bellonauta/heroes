@@ -9,8 +9,14 @@ class HeroModel {
   final double peso;
   final double velocidade;
 
-  HeroModel({required this.id, required this.nome, required this.universo, required this.altura, required this.peso, required this.velocidade, required this.photoUrl});
-
+  HeroModel(
+      {this.id,
+      this.nome,
+      this.universo,
+      this.altura,
+      this.peso,
+      this.velocidade,
+      this.photoUrl});
 
   Map<String, dynamic> toMap() {
     return {
@@ -38,5 +44,6 @@ class HeroModel {
 
   String toJson() => json.encode(toMap());
 
-  factory HeroModel.fromJson(String source) => HeroModel.fromMap(json.decode(source));
+  factory HeroModel.fromJson(String source) =>
+      HeroModel.fromMap(json.decode(source));
 }

@@ -12,7 +12,7 @@ class HomeController {
   HomeState get state => stateNotifier.value;
 
   //Controla Heróis
-  List<HeroModel>? heroes;
+  List<HeroModel> heroes;
 
   final repository = HomeRepos();
 
@@ -21,5 +21,5 @@ class HomeController {
     state = HomeState.loading;
     heroes = await repository.getHeroes();
     state = HomeState.success;
-  }  
+  }
 }

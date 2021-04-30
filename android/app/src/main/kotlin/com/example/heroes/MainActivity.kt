@@ -1,4 +1,4 @@
-package com.example.flutter_heroes
+package com.example.heroes
 
 import io.flutter.embedding.android.FlutterActivity
 

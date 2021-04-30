@@ -1,4 +1,4 @@
-# flutter_heroes
+# heroes
 
 A new Flutter project.
 
