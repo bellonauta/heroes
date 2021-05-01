@@ -177,7 +177,8 @@ class _HomePageState extends State<HomePage> {
                                                   size: 24,
                                                 ),
                                                 padding: EdgeInsets.all(2),
-                                                shape: CircleBorder(),
+                                                shape: CircleBorder(
+                                                    side: BorderSide.none),
                                               ),
                                             ),
                                           ],
