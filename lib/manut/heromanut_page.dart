@@ -4,6 +4,8 @@ import 'package:heroes/core/app_images.dart';
 import 'package:heroes/shared/widgets/image_uploader.dart';
 import 'package:heroes/shared/widgets/appbar.dart';
 
+import '../functions.dart';
+
 class HeroManutPage extends StatefulWidget {
   final int id;
   final String nome;
@@ -51,6 +53,13 @@ class _HeroManutPageState extends State<HeroManutPage> {
                   SizedBox(
                     width: size.width - 48,
                     child: ImageUploaderWidget(
+                        //Handler do evento de troca de foto...
+                        onChange: (String fileName) {
+                          msgBox(
+                              title: 'Foto alterada!',
+                              message: fileName,
+                              boxContext: context);
+                        },
                         imgUrl: AppImages.photo,
                         action: 'change',
                         uploadUrl: "http://localhost/upl.php"),

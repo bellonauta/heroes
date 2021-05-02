@@ -7,62 +7,111 @@ class ButtonWidget extends StatelessWidget {
   final Color backgroundColor;
   final Color fontColor;
   final Color borderColor;
+  final double width;
+  final double height;
+  final double fontSize;
   final VoidCallback onTap;
 
   ButtonWidget(
-      {this.label,
-      this.backgroundColor,
-      this.fontColor,
-      this.borderColor,
-      this.onTap});
+      {String label,
+      Color backgroundColor,
+      Color fontColor,
+      Color borderColor,
+      VoidCallback onTap,
+      double fontSize = 15,
+      double width = 0.0,
+      double height = 48})
+      : this.backgroundColor =
+            (backgroundColor != null ? backgroundColor : AppColors.darkGreen),
+        this.fontColor = (fontColor != null ? fontColor : AppColors.white),
+        this.borderColor =
+            (borderColor != null ? borderColor : AppColors.green),
+        this.onTap = onTap,
+        this.label = (label != null ? label : 'Ok'),
+        this.width = width,
+        this.fontSize = fontSize,
+        this.height = height;
 
-  ButtonWidget.confirm({String label = 'Confirmar', VoidCallback onTap})
+  ButtonWidget.confirm(
+      {String label = 'Confirmar',
+      VoidCallback onTap,
+      double width = 0.0,
+      double height = 48})
       : this.backgroundColor = AppColors.darkGreen,
         this.fontColor = AppColors.white,
         this.borderColor = AppColors.green,
         this.onTap = onTap,
-        this.label = label;
+        this.label = label,
+        this.fontSize = 15,
+        this.width = width,
+        this.height = height;
 
-  ButtonWidget.cancel({String label = 'Cancelar', VoidCallback onTap})
+  ButtonWidget.cancel(
+      {String label = 'Cancelar',
+      VoidCallback onTap,
+      double width = 0.0,
+      double height = 48})
       : this.backgroundColor = AppColors.purple,
         this.fontColor = AppColors.white,
         this.borderColor = AppColors.green,
         this.onTap = onTap,
-        this.label = label;
+        this.label = label,
+        this.fontSize = 15,
+        this.width = width,
+        this.height = height;
 
-  ButtonWidget.insert({String label = 'Incluir', VoidCallback onTap})
+  ButtonWidget.insert(
+      {String label = 'Incluir',
+      VoidCallback onTap,
+      double width = 0.0,
+      double height = 48})
       : this.backgroundColor = AppColors.darkGreen,
         this.fontColor = AppColors.white,
         this.borderColor = AppColors.green,
         this.onTap = onTap,
-        this.label = label;
+        this.label = label,
+        this.fontSize = 15,
+        this.width = width,
+        this.height = height;
 
-  ButtonWidget.figth({String label = 'Combate', VoidCallback onTap})
+  ButtonWidget.figth(
+      {String label = 'Combate',
+      VoidCallback onTap,
+      double width = 0.0,
+      double height = 48})
       : this.backgroundColor = AppColors.purple,
         this.fontColor = AppColors.white,
         this.borderColor = AppColors.green,
         this.onTap = onTap,
-        this.label = label;
+        this.label = label,
+        this.fontSize = 15,
+        this.width = width,
+        this.height = height;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      child: TextButton(
-        style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all(this.backgroundColor),
-            shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10))),
-            side:
-                MaterialStateProperty.all(BorderSide(color: this.borderColor))),
-        onPressed: this.onTap,
-        child: Text(this.label,
-            style: GoogleFonts.notoSans(
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-              color: this.fontColor,
-            )),
-      ),
-    );
+    var ret = Container(
+        width: ((this.width != null && this.width > 0) ? this.width : null),
+        height: ((this.height != null && this.height > 0) ? this.height : null),
+        child: TextButton(
+          style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(this.backgroundColor),
+              shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10))),
+              side: MaterialStateProperty.all(
+                  BorderSide(color: this.borderColor))),
+          onPressed: this.onTap,
+          child: Text(this.label,
+              //textAlign: TextAlign.center,
+              style: GoogleFonts.notoSans(
+                fontWeight: FontWeight.w600,
+                fontSize: ((this.fontSize != null && this.fontSize > 0)
+                    ? this.fontSize
+                    : 15),
+                color: this.fontColor,
+              )),
+        ));
+    //
+    return ret;
   }
 }

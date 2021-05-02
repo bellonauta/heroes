@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:heroes/core/app_images.dart';
+import 'package:heroes/shared/widgets/button.dart';
 import 'package:http/http.dart' as http;
 
 import '../../functions.dart';
@@ -9,11 +10,13 @@ class ImageUploaderWidget extends StatefulWidget {
   final String imgUrl;
   final String uploadUrl;
   final String action;
+  final void Function(String) onChange;
 
   bool showBtnImgUpdate;
   bool showBtnCancelImgUpdate;
 
-  ImageUploaderWidget({this.imgUrl = "", this.uploadUrl, this.action})
+  ImageUploaderWidget(
+      {this.imgUrl = "", this.uploadUrl, this.action, this.onChange})
       : assert(action == "none" || action == "new" || action == "change") {
     showBtnImgUpdate = this.action != 'none';
     showBtnCancelImgUpdate = false;
@@ -36,6 +39,9 @@ class _ImageUploaderWidgetState extends State<ImageUploaderWidget> {
       widget.showBtnImgUpdate = false;
       widget.showBtnCancelImgUpdate = true;
       setState(() {});
+      if (widget.onChange != null) {
+        widget.onChange(objFile.name);
+      }
     } else {
       objFile = null;
     }
@@ -86,28 +92,42 @@ class _ImageUploaderWidgetState extends State<ImageUploaderWidget> {
           children: [
             Container(
               //padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              width: 80,
-              height: 70,
+              width: 160,
+              height: 140,
               //Image.asset(AppImagese.photoUrl),
               child: Image.asset(
                 (widget.action == 'insert' && objFile == null)
                     ? Icons.image_search
                     : widget.imgUrl,
-                width: 80,
-                height: 70,
+                width: 160,
+                height: 140,
               ),
             ),
             if (widget.showBtnImgUpdate)
-              MaterialButton(
-                  width: 80,
-                  child: Text("Alterar"), onPressed: () => chooseImgFile()),
+              ButtonWidget(
+                  label: "Alterar",
+                  width: 160,
+                  height: 38,
+                  fontSize: 15,
+                  onTap: () {
+                    chooseImgFile();
+                  }),
+            //MaterialButton(
+            //    child: Text("Alterar"), onPressed: () => chooseImgFile()),
             if (widget.showBtnCancelImgUpdate)
-              MaterialButton(
-                  width: 80,
-                  child: Text("Cancelar"),
-                  onPressed: () {
+              ButtonWidget(
+                  label: "Cancelar",
+                  width: 160,
+                  height: 38,
+                  fontSize: 15,
+                  onTap: () {
                     uploadImgFile(context);
                   }),
+            //MaterialButton(
+            //    child: Text("Cancelar"),
+            //    onPressed: () {
+            //      uploadImgFile(context);
+            //}),
             //------Show file name when file is selected
             //if (objFile != null)
             //  Text("File name : ${objFile.name}"),
