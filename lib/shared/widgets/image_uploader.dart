@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:heroes/core/app_consts.dart';
 import 'package:heroes/core/app_images.dart';
 import 'package:heroes/shared/widgets/button.dart';
 import 'package:http/http.dart' as http;
@@ -8,15 +11,13 @@ import '../../functions.dart';
 
 class ImageUploaderWidget extends StatefulWidget {
   final String imgUrl;
-  final String uploadUrl;
   final String action;
   final void Function(String) onChange;
 
   bool showBtnImgUpdate;
   bool showBtnCancelImgUpdate;
 
-  ImageUploaderWidget(
-      {this.imgUrl = "", this.uploadUrl, this.action, this.onChange})
+  ImageUploaderWidget({this.imgUrl = "", this.action, this.onChange})
       : assert(action == "none" || action == "new" || action == "change") {
     showBtnImgUpdate = this.action != 'none';
     showBtnCancelImgUpdate = false;
@@ -49,11 +50,11 @@ class _ImageUploaderWidgetState extends State<ImageUploaderWidget> {
 
   void uploadImgFile(BuildContext context) async {
     //Cria o pacote http multipart request object...
-    var ret = [true, ""];
+    var ret = new DefFnReturn();
 
     final request = http.MultipartRequest(
       "POST",
-      Uri.parse(widget.uploadUrl),
+      Uri.parse(AppConsts.urlAPIManut),
     );
     //Parâmetros...
     request.fields["id"] = "herophoto";
@@ -66,15 +67,16 @@ class _ImageUploaderWidgetState extends State<ImageUploaderWidget> {
       //Faz o request(POST)...
       var response = await request.send();
       if (response.statusCode != 200) {
-        ret[0] = false;
-        ret[1] = response.stream.bytesToString();
+        ret.success = false;
+        ret.message = response.stream.bytesToString() as String;
       }
     } catch (e) {
-      ret[0] = false;
-      ret[1] = 'Falha ao enviar o arquivo. Tente novamente.\n\n' + e.toString();
+      ret.success = false;
+      ret.message =
+          'Falha ao enviar o arquivo. Tente novamente.\n\n' + e.toString();
     }
-    if (!ret[0]) {
-      msgBox(boxContext: context, title: "Ooops...", message: ret[1]);
+    if (!ret.success) {
+      msgBox(boxContext: context, title: "Ooops...", message: ret.message);
     }
   }
 
