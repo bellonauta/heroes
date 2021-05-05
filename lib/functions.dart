@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:heroes/core/app_consts.dart';
+import 'package:heroes/core/app_images.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 
@@ -73,8 +75,6 @@ Future<DefFnReturn> putB64ImgToRepo({String fileId, String b64}) async {
   //Cria o pacote http multipart request object...
   DefFnReturn ret = new DefFnReturn();
 
-  //var base64Str = base64Encode(objFile.bytes);
-
   Map<String, String> headers = {
     "Access-Control-Allow-Origin": "*",
     //"Content-type": "application/x-www-form-urlencoded",
@@ -83,7 +83,7 @@ Future<DefFnReturn> putB64ImgToRepo({String fileId, String b64}) async {
   };
 
   //Fields do POST...
-  Map<String, dynamic> body = {"action": "save", "id": fileId, "b64": b64};
+  Map<String, dynamic> body = {"action": "save", "fileId": fileId, "b64": b64};
 
   try {
     //Faz o request(POST)...
@@ -151,7 +151,6 @@ Future<DefFnReturn> putB64ImgToRepo({String fileId, String b64}) async {
 ///  o código base64 da mesma, na propriedade [DefFnReturn.data] do
 ///  retorno da função.
 ///  String fileId - ID do arquivo de imagem
-///
 Future<DefFnReturn> getB64ImgFromRepo({String fileId}) async {
   //Cria o pacote http multipart request object...
   DefFnReturn ret = new DefFnReturn();
@@ -166,7 +165,7 @@ Future<DefFnReturn> getB64ImgFromRepo({String fileId}) async {
   };
 
   //Fields do POST...
-  Map<String, dynamic> body = {"action": "read", "id": fileId};
+  Map<String, dynamic> body = {"action": "read", "fileId": fileId};
 
   try {
     //Faz o request(POST)...
@@ -198,6 +197,56 @@ Future<DefFnReturn> getB64ImgFromRepo({String fileId}) async {
   } catch (e) {
     ret.success = false;
     ret.message = e.toString();
+  }
+  //
+  return ret;
+}
+
+/// Busca a imagem do herói e retorna um [Uint8List] da mesma.
+Future<Image> loadHeroImgFile(
+    {String fileId, BuildContext context, Function(Uint8List) onLoad}) async {
+  Image ret = null;  
+  //  
+  if (fileId == '') {     
+     ret = Image.asset(AppImages.person);
+     if (onLoad != null) {
+        onLoad(null);
+     }
+     msgBox(title: "Ooops...", message: 'ID vazio!!??', boxContext: context);     
+  } else {
+    var res = await getB64ImgFromRepo(fileId: fileId);
+    if (!res.success) {
+       ret = Image.asset(AppImages.person);
+       msgBox(title: "Ooops...", message: res.message, boxContext: context);
+    } else if (res.data == '') {
+      ret = Image.asset(AppImages.person);
+      msgBox(
+           title: "Ooops...",
+            message: 'Imagem não encontrada.',
+            boxContext: context);
+    }     
+    if (ret == null && onLoad != null) {
+       onLoad(null);
+    } else {
+        //Uint8List bytes = BASE64.decode(b64.data);
+        //Uint8List bytes = Base64Codec().decode(res.data);
+        Uint8List bytes = base64Decode(res.data);
+        if (onLoad != null) {
+          onLoad(bytes);
+        }
+        //Uint8List bytes = Base64Decoder().convert(
+        //    'TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb2');
+        //var bytes = base64.decode(
+        //    'TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb2');
+        ret = Image.memory(bytes,
+                    width: 200,
+                    height: 200,
+                    cacheHeight: 200,
+                    cacheWidth: 200,
+                    fit: BoxFit.fitWidth,
+                    filterQuality: FilterQuality.low);
+        msgBox(title: "Ok", message: "Imagem recuperada.", boxContext: context);
+    }
   }
   //
   return ret;

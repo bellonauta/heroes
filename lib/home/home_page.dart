@@ -1,7 +1,3 @@
-//import 'package:devquiz/challenge/challenge_page.dart';
-//import 'package:devquiz/challenge/widgets/quiz/quiz_widget.dart';
-//import 'dart:html';
-
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
@@ -9,6 +5,7 @@ import 'package:heroes/core/app_colors.dart';
 import 'package:heroes/core/app_gradients.dart';
 import 'package:heroes/core/app_images.dart';
 import 'package:heroes/core/app_text_styles.dart';
+import 'package:heroes/functions.dart';
 import 'package:heroes/home/home_controller.dart';
 import 'package:heroes/manut/heromanut_page.dart';
 import 'package:heroes/shared/widgets/appbar.dart';
@@ -80,12 +77,13 @@ class _HomePageState extends State<HomePage> {
                                     horizontal: 4, vertical: 2),
                                 width: 65,
                                 height: 74,
-                                //Image.asset(AppImagese.photoUrl),
-                                child: Image.asset(
-                                  AppImages.photo,
-                                  width: 65,
-                                  height: 74,
-                                ),
+                                child: Image.memory(e.photo,
+                                 width: 65,
+                                  height: 74, 
+                                 cacheHeight: 65,
+                                 cacheWidth: 74,
+                                 fit: BoxFit.fitWidth,
+                                 filterQuality: FilterQuality.low),
                               ),
                               Container(
                                 height: 74,
@@ -125,6 +123,7 @@ class _HomePageState extends State<HomePage> {
                                                               HeroManutPage(
                                                                   id: e.id,
                                                                   nome: e.nome,
+                                                                  photo: e.photo,
                                                                   peso: e.peso,
                                                                   velocidade: e
                                                                       .velocidade,
@@ -132,8 +131,6 @@ class _HomePageState extends State<HomePage> {
                                                                       e.altura,
                                                                   universo: e
                                                                       .universo,
-                                                                  photoUrl: e
-                                                                      .photoUrl,
                                                                   action:
                                                                       'update')));
                                                 },
@@ -158,6 +155,7 @@ class _HomePageState extends State<HomePage> {
                                                               HeroManutPage(
                                                                   id: e.id,
                                                                   nome: e.nome,
+                                                                  photo: e.photo,
                                                                   peso: e.peso,
                                                                   velocidade: e
                                                                       .velocidade,
@@ -165,8 +163,6 @@ class _HomePageState extends State<HomePage> {
                                                                       e.altura,
                                                                   universo: e
                                                                       .universo,
-                                                                  photoUrl: e
-                                                                      .photoUrl,
                                                                   action:
                                                                       'delete')));
                                                 },
@@ -207,13 +203,28 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Container(
                               width: 150,
-                              child: ButtonWidget.insert(onTap: () {})),
+                              child: ButtonWidget.insert(onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => HeroManutPage(
+                                            id: "",
+                                            nome: "",
+                                            peso: "",
+                                            velocidade: "",
+                                            altura: "",
+                                            universo: "",
+                                            photo: null,
+                                            action: 'insert')));
+                              })),
                           SizedBox(
                             width: 20,
                           ),
-                          Container(
-                              width: 150,
-                              child: ButtonWidget.figth(onTap: () {})),
+                          controller.heroes.length > 0
+                              ? Container(
+                                  width: 150,
+                                  child: ButtonWidget.figth(onTap: () {}))
+                              : Container(height: 0.0, width: 0.0)
                         ])),
               ),
             )),

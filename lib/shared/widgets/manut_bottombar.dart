@@ -18,21 +18,27 @@ class ManutBottomBarWidget extends StatefulWidget {
 }
 
 class ManutBottomBarWidgetState extends State<ManutBottomBarWidget> {
-  bool isVisible = false;
+  bool isConfirmVisible = false;
+  bool isCancelVisible = false;
+
+  bool get isVisible => (this.isConfirmVisible || this.isCancelVisible);
+ 
   int stateCount = 0;
 
-  void showBottomBar() async {
-    if (!isVisible) {
-      stateCount++;
-      isVisible = true;
+  void showBottomBar({bool confirm = true, bool cancel = true}) {
+    if (!this.isVisible) {
+      this.stateCount++;
+      this.isConfirmVisible = confirm;
+      this.isCancelVisible = cancel;
       setState(() {});
     }
   }
 
-  void hideBottomBar() async {
-    if (isVisible) {
-      stateCount++;
-      isVisible = false;
+  void hideBottomBar() {
+    if (this.isVisible) {
+      this.stateCount++;
+      this.isConfirmVisible = false;
+      this.isCancelVisible = false;      
       setState(() {});
     }
   }
@@ -40,12 +46,11 @@ class ManutBottomBarWidgetState extends State<ManutBottomBarWidget> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    this.isVisible = (this.isVisible || (stateCount == 0 && widget.show));
 
     return SafeArea(
         bottom: true,
         child: Visibility(
-            visible: this.isVisible,
+            visible: (this.isVisible || (this.stateCount == 0 && widget.show)),
             child: Container(
               height: 80,
               width: min(400, size.width * 0.9),
@@ -55,6 +60,7 @@ class ManutBottomBarWidgetState extends State<ManutBottomBarWidget> {
                     child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          this.isConfirmVisible ?
                           Container(
                               width: 150,
                               child: ButtonWidget.confirm(onTap: () {
@@ -62,10 +68,14 @@ class ManutBottomBarWidgetState extends State<ManutBottomBarWidget> {
                                   //Validação dos campos...
                                   widget.onConfirm();
                                 }
-                              })),
-                          SizedBox(
-                            width: 20,
-                          ),
+                              }))
+                           : Container(width: 0.0, height: 0.0),  
+                          (this.isConfirmVisible && this.isCancelVisible)
+                            ? SizedBox(
+                               width: 20,
+                            )
+                            : Container(width: 0.0, height: 0.0),  
+                          this.isCancelVisible ?  
                           Container(
                               width: 150,
                               child: ButtonWidget.cancel(onTap: () {
@@ -73,7 +83,8 @@ class ManutBottomBarWidgetState extends State<ManutBottomBarWidget> {
                                 if (widget.onCancel != null) {
                                   widget.onCancel();
                                 }
-                              })),
+                              }))
+                          : Container(width: 0.0, height: 0.0),     
                         ])),
               ),
             )));

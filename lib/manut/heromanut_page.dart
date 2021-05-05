@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:heroes/core/app_consts.dart';
 import 'package:heroes/core/app_images.dart';
@@ -16,21 +19,21 @@ import '../functions.dart';
 class HeroManutPage extends StatefulWidget {
   final String id;
   final String nome;
+  final Uint8List photo;  
   final String peso;
   final String velocidade;
   final String altura;
   final String universo;
-  final String photoUrl;
   final String action;
 
   HeroManutPage(
       {this.id,
       this.nome,
+      this.photo,
       this.peso,
       this.velocidade,
       this.altura,
       this.universo,
-      this.photoUrl,
       this.action})
       : assert(action == "update" || action == "delete" || action == "insert");
 
@@ -51,6 +54,8 @@ class _HeroManutPageState extends State<HeroManutPage> {
   final fldVelocidadeFocus = FocusNode();
   final fldUniversoFocus = FocusNode();
 
+  PlatformFile photoFile;
+
   bool hasUpdates = false;
   bool get getHasUpdates => this.hasUpdates;
   set setHasUpdates(bool hasUpdates) => {
@@ -64,9 +69,9 @@ class _HeroManutPageState extends State<HeroManutPage> {
       {BuildContext context,
       String action,
       String heroId,
-      Function(bool, String) onAfterPost}) async {
+      Function(bool, String, String) onAfterPost}) async {
     //Cria o pacote http multipart request object...
-    var ret = new DefFnReturn();
+    DefFnReturn ret = new DefFnReturn();
 
     Map<String, String> headers = {
       "Access-Control-Allow-Origin": "*",
@@ -106,10 +111,6 @@ class _HeroManutPageState extends State<HeroManutPage> {
 
     try {
       //Faz o request(POST)...
-
-      //http.Response response =
-      //    await http.Response.fromStream(await request.send());
-
       http.Response response = await http.post(
         Uri.parse(AppConsts.urlAPIManut),
         headers: headers,
@@ -130,6 +131,8 @@ class _HeroManutPageState extends State<HeroManutPage> {
           if (!resp['success']) {
             ret.success = false;
             ret.message = resp['message'];
+          } else {
+            ret.data = resp['id'];
           }
         }
       }
@@ -140,7 +143,7 @@ class _HeroManutPageState extends State<HeroManutPage> {
 
     //
     if (onAfterPost != null) {
-      onAfterPost(ret.success, ret.message);
+      onAfterPost(ret.success, ret.message, ret.data); //ret.data == heroId
     }
   }
 
@@ -175,8 +178,11 @@ class _HeroManutPageState extends State<HeroManutPage> {
 
     this.hasUpdates = (widget.action == 'delete');
 
-    //Para acessar recursos públicos de uma classe:
+    //Para acessar recursos públicos da classe...
     GlobalKey<ManutBottomBarWidgetState> _bottomBarKey = GlobalKey();
+
+    //Para acessar recursos públicos de uma classe:
+    GlobalKey<ImageUploaderWidgetState> _imgUploaderKey = GlobalKey();
 
     return Scaffold(
       appBar: AppBarWidget(
@@ -195,17 +201,18 @@ class _HeroManutPageState extends State<HeroManutPage> {
                 SizedBox(
                   width: size.width - 48,
                   child: ImageUploaderWidget(
-                    //Handler do evento de troca de foto...
-                    onChange: (String fileName) {
-                      this.setHasUpdates = true;
-                      _bottomBarKey.currentState.showBottomBar();
-                      msgBox(
-                          title: 'Foto alterada!',
-                          message: fileName,
-                          boxContext: context);
+                    key: _imgUploaderKey,
+                    //Handler do evento de troca/seleção de foto...
+                    onChange: (PlatformFile file, bool newImg) {
+                      this.photoFile = newImg ? file : null;
+                      _bottomBarKey.currentState.showBottomBar(confirm: true);
                     },
-                    imgUrl: AppImages.photo,
-                    action: 'change',
+                    image: widget.photo,
+                    action: widget.action == 'insert'
+                        ? 'new'
+                        : widget.action == 'delete'
+                            ? 'none'
+                            : 'change',
                   ),
                 ),
                 SizedBox(
@@ -225,11 +232,7 @@ class _HeroManutPageState extends State<HeroManutPage> {
                     readOnly: widget.action == 'delete',
                     onChanged: (text) => {
                       this.setHasUpdates = true,
-                      _bottomBarKey.currentState.showBottomBar(),
-                      //msgBox(
-                      //    title: "Nome...",
-                      //    message: fldNomeController.text,
-                      //    boxContext: context)
+                      _bottomBarKey.currentState.showBottomBar(confirm: true),
                     },
                   ),
                 ),
@@ -246,11 +249,11 @@ class _HeroManutPageState extends State<HeroManutPage> {
                           width: 32,
                           height: 32,
                         ),
-                        hintText: 'Informe o universo do herói'),
+                        hintText: 'Universo do herói(Marvel,DC,etc.)'),
                     readOnly: widget.action == 'delete',
                     onChanged: (text) => {
                       this.setHasUpdates = true,
-                      _bottomBarKey.currentState.showBottomBar(),
+                      _bottomBarKey.currentState.showBottomBar(confirm: true),
                     },
                   ),
                 ),
@@ -271,11 +274,11 @@ class _HeroManutPageState extends State<HeroManutPage> {
                             width: 32,
                             height: 32,
                           ),
-                          hintText: 'Informe o peso do herói(em quilos)'),
+                          hintText: 'Peso do herói(em quilos)'),
                       readOnly: widget.action == 'delete',
                       onChanged: (text) => {
                             this.setHasUpdates = true,
-                            _bottomBarKey.currentState.showBottomBar()
+                            _bottomBarKey.currentState.showBottomBar(confirm: true)
                           }),
                 ),
                 //Altura...
@@ -295,11 +298,11 @@ class _HeroManutPageState extends State<HeroManutPage> {
                             width: 32,
                             height: 32,
                           ),
-                          hintText: 'Informe a altura do herói(em metros)'),
+                          hintText: 'Altura do herói(em metros)'),
                       readOnly: widget.action == 'delete',
                       onChanged: (text) => {
                             this.setHasUpdates = true,
-                            _bottomBarKey.currentState.showBottomBar()
+                            _bottomBarKey.currentState.showBottomBar(confirm: true)
                           }),
                 ),
                 //Velocidade...
@@ -319,12 +322,11 @@ class _HeroManutPageState extends State<HeroManutPage> {
                             width: 32,
                             height: 32,
                           ),
-                          hintText:
-                              'Informe a velocidade máxima do herói(em km/hora)'),
+                          hintText: 'Velocidade máxima do herói(em km/hora)'),
                       readOnly: widget.action == 'delete',
                       onChanged: (text) => {
                             this.setHasUpdates = true,
-                            _bottomBarKey.currentState.showBottomBar()
+                            _bottomBarKey.currentState.showBottomBar(confirm: true)
                           }),
                 ),
               ],
@@ -334,7 +336,7 @@ class _HeroManutPageState extends State<HeroManutPage> {
       ),
       bottomNavigationBar: ManutBottomBarWidget(
           key: _bottomBarKey,
-          show: this.hasUpdates,
+          show: widget.action == 'insert' || this.hasUpdates || photoFile != null,
           onConfirm: () {
             //Salva alterações...
             //Validação
@@ -350,11 +352,22 @@ class _HeroManutPageState extends State<HeroManutPage> {
                     fldAlturaController.text == "")
                 ? 0
                 : double.tryParse(fldAlturaController.text));
-            if (fldNomeController.text == "") {
+            if (photoFile == null) {
+              msgBox(
+                  title: "Foto...",
+                  message: "Selecione uma foto para o herói.",
+                  boxContext: context);
+            } else if (fldNomeController.text == "") {
               fldNomeFocus.requestFocus();
               msgBox(
                   title: "Nome...",
                   message: "Informe o nome do herói.",
+                  boxContext: context);
+            } else if (fldUniversoController.text == "") {
+              fldUniversoFocus.requestFocus();
+              msgBox(
+                  title: "Nome...",
+                  message: "Informe o universo do herói.",
                   boxContext: context);
             } else if (doubleVeloc == null || doubleVeloc < 5) {
               fldVelocidadeFocus.requestFocus();
@@ -383,19 +396,41 @@ class _HeroManutPageState extends State<HeroManutPage> {
                   context: context,
                   action: widget.action,
                   heroId: widget.id,
-                  onAfterPost: (success, message) {
+                  onAfterPost: (success, message, heroId) {
+                    var confirmed = true;
                     if (!success) {
-                      fldAlturaFocus.requestFocus();
+                      confirmed = false;
+                      fldNomeFocus.requestFocus();
                       msgBox(
                           title: "Ooops...",
                           message:
                               "Ocorreu uma falha na manutenção.\n\n" + message,
                           boxContext: context);
                     } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => HomePage()),
-                      );
+                      if (this.photoFile != null) {
+                        putB64ImgToRepo(
+                                fileId: heroId,
+                                //b64: Base64Codec().encode(this.photoFile.bytes))
+                                b64: base64Encode(this.photoFile.bytes))
+                            .then((res) {
+                          if (!res.success) {
+                            confirmed = false;
+                            msgBox(
+                                title: "Ooops...",
+                                message:
+                                    'Falha durante salvamento da foto do herói.\n\n' +
+                                        res.message,
+                                boxContext: context);
+                          }
+                        });
+                      }
+                      //
+                      if (confirmed) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => HomePage()),
+                        );
+                      }
                     }
                   });
             }
@@ -408,6 +443,20 @@ class _HeroManutPageState extends State<HeroManutPage> {
             fldUniversoController.text = widget.universo;
             fldVelocidadeController.text =
                 widget.velocidade; //.toStringAsPrecision(9);
+            //
+            if (widget.action == 'insert' || widget.action == 'delete') {
+               Navigator.push(
+                         context,
+                         MaterialPageRoute(builder: (context) => HomePage()),
+                       );
+            } else {             
+              _bottomBarKey.currentState.showBottomBar(confirm: false);
+              //
+              if (this.photoFile != null) {
+                 //Retorna a última photo salva do herói...
+                 _imgUploaderKey.currentState.cancelPhotoChange();
+              }
+            }  
           }),
     );
   }

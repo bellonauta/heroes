@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
 class HeroModel {
   final String id;
   final String nome;
-  final String photoUrl;
+  final Uint8List photo;
   final String universo;
   final String altura;
   final String peso;
@@ -12,21 +14,21 @@ class HeroModel {
   HeroModel(
       {this.id,
       this.nome,
+      this.photo,
       this.universo,
       this.altura,
       this.peso,
-      this.velocidade,
-      this.photoUrl});
+      this.velocidade});
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'nome': nome,
-      'photoUrl': photoUrl,
       'universo': universo,
       'altura': altura,
       'peso': peso,
       'velocidade': velocidade,
+      'photo': photo
     };
   }
 
@@ -34,11 +36,11 @@ class HeroModel {
     return HeroModel(
       id: map['id']['S'],
       nome: map['nome']['S'],
-      photoUrl: map['photoUrl']['S'],
       universo: map['universo']['S'],
       altura: map['altura']['S'],
       peso: map['peso']['S'],
       velocidade: map['velocidade']['S'],
+      photo: base64Decode(map['photo']['S'])
     );
   }
 

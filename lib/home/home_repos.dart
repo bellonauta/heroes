@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:heroes/core/app_consts.dart';
 import 'package:heroes/shared/models/hero_model.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 import '../functions.dart';
@@ -53,16 +52,17 @@ class HomeRepos {
             ret.success = false;
             ret.message = resp['message'];
           } else {
+            //if (false) {
             var list = resp['heroes'] as List;
             heroes = list.map((i) {
               return HeroModel(
-                id: i['id']['S'],
-                nome: i['nome']['S'],
-                universo: i['universo']['S'],
-                altura: i['altura']['S'],
-                peso: i['peso']['S'],
-                velocidade: i['velocidade']['S'],
-              );
+                  id: i['id']['S'],
+                  nome: i['nome']['S'],
+                  photo: base64Decode(i['photo']['S']),
+                  universo: i['universo']['S'],
+                  altura: i['altura']['S'],
+                  peso: i['peso']['S'],
+                  velocidade: i['velocidade']['S']);
             }).toList();
           }
         }
