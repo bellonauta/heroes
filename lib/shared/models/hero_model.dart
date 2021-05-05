@@ -1,13 +1,13 @@
 import 'dart:convert';
 
 class HeroModel {
-  final int id;
+  final String id;
   final String nome;
   final String photoUrl;
   final String universo;
-  final double altura;
-  final double peso;
-  final double velocidade;
+  final String altura;
+  final String peso;
+  final String velocidade;
 
   HeroModel(
       {this.id,
@@ -32,13 +32,13 @@ class HeroModel {
 
   factory HeroModel.fromMap(Map<String, dynamic> map) {
     return HeroModel(
-      id: map['id'],
-      nome: map['nome'],
-      photoUrl: map['photoUrl'],
-      universo: map['universo'],
-      altura: map['altura'],
-      peso: map['peso'],
-      velocidade: map['velocidade'],
+      id: map['id']['S'],
+      nome: map['nome']['S'],
+      photoUrl: map['photoUrl']['S'],
+      universo: map['universo']['S'],
+      altura: map['altura']['S'],
+      peso: map['peso']['S'],
+      velocidade: map['velocidade']['S'],
     );
   }
 

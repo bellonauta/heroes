@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:math';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:heroes/core/app_consts.dart';
 import 'package:heroes/core/app_images.dart';
@@ -12,11 +14,11 @@ import 'package:http/http.dart' as http;
 import '../functions.dart';
 
 class HeroManutPage extends StatefulWidget {
-  final int id;
+  final String id;
   final String nome;
-  final double peso;
-  final double velocidade;
-  final double altura;
+  final String peso;
+  final String velocidade;
+  final String altura;
   final String universo;
   final String photoUrl;
   final String action;
@@ -30,7 +32,7 @@ class HeroManutPage extends StatefulWidget {
       this.universo,
       this.photoUrl,
       this.action})
-      : assert(action == "edit" || action == "delete" || action == "insert");
+      : assert(action == "update" || action == "delete" || action == "insert");
 
   @override
   _HeroManutPageState createState() => _HeroManutPageState();
@@ -41,11 +43,13 @@ class _HeroManutPageState extends State<HeroManutPage> {
   final fldAlturaController = TextEditingController();
   final fldPesoController = TextEditingController();
   final fldVelocidadeController = TextEditingController();
+  final fldUniversoController = TextEditingController();
 
   final fldNomeFocus = FocusNode();
   final fldAlturaFocus = FocusNode();
   final fldPesoFocus = FocusNode();
   final fldVelocidadeFocus = FocusNode();
+  final fldUniversoFocus = FocusNode();
 
   bool hasUpdates = false;
   bool get getHasUpdates => this.hasUpdates;
@@ -59,33 +63,81 @@ class _HeroManutPageState extends State<HeroManutPage> {
   void postManut(
       {BuildContext context,
       String action,
+      String heroId,
       Function(bool, String) onAfterPost}) async {
     //Cria o pacote http multipart request object...
     var ret = new DefFnReturn();
 
-    final request = http.MultipartRequest(
-      "POST",
-      Uri.parse(AppConsts.urlAPIManut),
-    );
+    Map<String, String> headers = {
+      "Access-Control-Allow-Origin": "*",
+      //"Content-type": "application/x-www-form-urlencoded",
+      'Content-type': 'application/json',
+      //"Accept': "application/json"
+    };
 
-    //Parâmetros...
+    //Fields do POST...
+    Map<String, dynamic> body = {
+      "action": action,
+      "id": action == 'insert' ? "" : heroId,
+      "nome": fldNomeController.text,
+      "altura": fldAlturaController.text,
+      "peso": fldPesoController.text,
+      "velocidade": fldVelocidadeController.text,
+      "universo": fldUniversoController.text,
+    };
+
+    //nt statusCode = response.statusCode;
+    //String responseBody = response.body;
+
+    /*
+    var request =
+        new http.MultipartRequest("POST", Uri.parse(AppConsts.urlAPIManut));
+
     request.fields["action"] = action;
+    request.fields["id"] = fldNomeController.text;
     request.fields["nome"] = fldNomeController.text;
+    request.fields["universo"] = fldUniversoController.text;
     request.fields["altura"] = fldAlturaController.text;
     request.fields["peso"] = fldPesoController.text;
     request.fields["velocidade"] = fldVelocidadeController.text;
 
+    request.headers.addAll(headers);
+    */
+
     try {
       //Faz o request(POST)...
-      var response = await request.send();
+
+      //http.Response response =
+      //    await http.Response.fromStream(await request.send());
+
+      http.Response response = await http.post(
+        Uri.parse(AppConsts.urlAPIManut),
+        headers: headers,
+        body: json.encode(body),
+        encoding: Encoding.getByName('utf-8'),
+      );
+
       if (response.statusCode != 200) {
         ret.success = false;
-        ret.message = response.stream.bytesToString() as String;
+        ret.message = 'HTTP Fault ' + response.statusCode.toString();
+      } else {
+        //Decodifica o retorno...
+        if (response.body == null || response.body == '') {
+          ret.success = false;
+          ret.message = 'Retorno do request é inválido.';
+        } else {
+          var resp = jsonDecode(response.body);
+          if (!resp['success']) {
+            ret.success = false;
+            ret.message = resp['message'];
+          }
+        }
       }
     } catch (e) {
       ret.success = false;
       ret.message = e.toString();
     }
+
     //
     if (onAfterPost != null) {
       onAfterPost(ret.success, ret.message);
@@ -106,11 +158,13 @@ class _HeroManutPageState extends State<HeroManutPage> {
     fldAlturaController.dispose();
     fldPesoController.dispose();
     fldVelocidadeController.dispose();
+    fldUniversoController.dispose();
     //
     fldNomeFocus.dispose();
     fldAlturaFocus.dispose();
     fldPesoFocus.dispose();
     fldVelocidadeFocus.dispose();
+    fldUniversoFocus.dispose();
     //
     super.dispose();
   }
@@ -126,7 +180,7 @@ class _HeroManutPageState extends State<HeroManutPage> {
 
     return Scaffold(
       appBar: AppBarWidget(
-          title: widget.action == 'edit'
+          title: widget.action == 'update'
               ? "Alterar dados do herói"
               : widget.action == 'delete'
                   ? "Excluir herói"
@@ -179,13 +233,34 @@ class _HeroManutPageState extends State<HeroManutPage> {
                     },
                   ),
                 ),
+                SizedBox(
+                  width: size.width - 48,
+                  child: TextField(
+                    maxLength: 20,
+                    controller: fldUniversoController..text = widget.universo,
+                    focusNode: fldUniversoFocus,
+                    decoration: InputDecoration(
+                        border: InputBorder.none,
+                        icon: Image.asset(
+                          AppImages.person,
+                          width: 32,
+                          height: 32,
+                        ),
+                        hintText: 'Informe o universo do herói'),
+                    readOnly: widget.action == 'delete',
+                    onChanged: (text) => {
+                      this.setHasUpdates = true,
+                      _bottomBarKey.currentState.showBottomBar(),
+                    },
+                  ),
+                ),
                 //Peso...
                 SizedBox(
                   width: size.width - 48,
                   child: TextField(
                       maxLength: 9,
                       controller: fldPesoController
-                        ..text = widget.peso.toStringAsPrecision(9),
+                        ..text = widget.peso, //.toStringAsPrecision(9),
                       focusNode: fldPesoFocus,
                       keyboardType: TextInputType.numberWithOptions(
                           signed: false, decimal: true),
@@ -209,7 +284,7 @@ class _HeroManutPageState extends State<HeroManutPage> {
                   child: TextField(
                       maxLength: 9,
                       controller: fldAlturaController
-                        ..text = widget.altura.toStringAsPrecision(9),
+                        ..text = widget.altura, //.toStringAsPrecision(9),
                       focusNode: fldAlturaFocus,
                       keyboardType: TextInputType.numberWithOptions(
                           signed: false, decimal: true),
@@ -233,7 +308,7 @@ class _HeroManutPageState extends State<HeroManutPage> {
                   child: TextField(
                       maxLength: 9,
                       controller: fldVelocidadeController
-                        ..text = widget.peso.toStringAsPrecision(9),
+                        ..text = widget.peso, //.toStringAsPrecision(9),
                       focusNode: fldVelocidadeFocus,
                       keyboardType: TextInputType.numberWithOptions(
                           signed: false, decimal: true),
@@ -307,6 +382,7 @@ class _HeroManutPageState extends State<HeroManutPage> {
               postManut(
                   context: context,
                   action: widget.action,
+                  heroId: widget.id,
                   onAfterPost: (success, message) {
                     if (!success) {
                       fldAlturaFocus.requestFocus();
@@ -327,10 +403,11 @@ class _HeroManutPageState extends State<HeroManutPage> {
           onCancel: () {
             //Desfaz alterações...
             fldNomeController.text = widget.nome;
-            fldPesoController.text = widget.peso.toStringAsPrecision(9);
-            fldAlturaController.text = widget.altura.toStringAsPrecision(9);
+            fldPesoController.text = widget.peso; //.toStringAsPrecision(9);
+            fldAlturaController.text = widget.altura; //.toStringAsPrecision(9);
+            fldUniversoController.text = widget.universo;
             fldVelocidadeController.text =
-                widget.velocidade.toStringAsPrecision(9);
+                widget.velocidade; //.toStringAsPrecision(9);
           }),
     );
   }

@@ -135,7 +135,7 @@ class _HomePageState extends State<HomePage> {
                                                                   photoUrl: e
                                                                       .photoUrl,
                                                                   action:
-                                                                      'edit')));
+                                                                      'update')));
                                                 },
                                                 color: Colors.blue,
                                                 textColor: Colors.white,

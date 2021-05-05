@@ -1,8 +1,15 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:heroes/core/app_consts.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 
 class DefFnReturn {
-  bool success = false;
+  bool success = true;
   String message = "";
+  String data = "";
 
   bool get getSuccess => this.success;
   set setSuccess(bool success) => this.success = success;
@@ -34,4 +41,164 @@ void msgBox({String title, String message, BuildContext boxContext}) {
           ],
         );
       });
+}
+
+Future<DefFnReturn> createFolder({String folder}) async {
+  DefFnReturn ret = new DefFnReturn();
+
+  //Diretório de documentos da App...
+  final Directory _appDocDir = await getApplicationDocumentsDirectory();
+  //Une...
+  final Directory _appDocDirFolder =
+      Directory('${_appDocDir.path}/${AppConsts.photosFolder}');
+  //
+  if (!(await _appDocDirFolder.exists())) {
+    //Não existe - Cria o folder...
+    try {
+      await _appDocDirFolder.create(recursive: true);
+    } catch (e) {
+      ret.success = false;
+      ret.message = e.toString();
+    }
+  }
+  //
+  return ret;
+}
+
+///  Coloca uma imagem no repositório(AWS S3), com
+///  seu conteúdo codificado em base64.
+///  String fileId - ID do arquivo de imagem
+///  String b64 - base64Encode da imagem (Ex: base64Encode(objFile.bytes))
+Future<DefFnReturn> putB64ImgToRepo({String fileId, String b64}) async {
+  //Cria o pacote http multipart request object...
+  DefFnReturn ret = new DefFnReturn();
+
+  //var base64Str = base64Encode(objFile.bytes);
+
+  Map<String, String> headers = {
+    "Access-Control-Allow-Origin": "*",
+    //"Content-type": "application/x-www-form-urlencoded",
+    'Content-type': 'application/json',
+    //"Accept': "application/json"
+  };
+
+  //Fields do POST...
+  Map<String, dynamic> body = {"action": "save", "id": fileId, "b64": b64};
+
+  try {
+    //Faz o request(POST)...
+    http.Response response = await http.post(
+      Uri.parse(AppConsts.urlAPIPhoto),
+      headers: headers,
+      body: json.encode(body),
+      encoding: Encoding.getByName('utf-8'),
+    );
+
+    if (response.statusCode != 200) {
+      ret.success = false;
+      ret.message = 'HTTP Fault ' + response.statusCode.toString();
+    } else {
+      //Decodifica o retorno...
+      if (response.body == null || response.body == '') {
+        ret.success = false;
+        ret.message = 'Retorno do request é inválido.';
+      } else {
+        var resp = jsonDecode(response.body);
+        if (!resp['success']) {
+          ret.success = false;
+          ret.message = resp['message'];
+        }
+      }
+    }
+  } catch (e) {
+    ret.success = false;
+    ret.message = e.toString();
+  }
+
+  /*
+    final request = http.MultipartRequest(
+      "POST",
+      Uri.parse(AppConsts.urlAPIManut),
+    );
+    //Parâmetros...
+    request.fields["id"] = "herophoto";
+
+    try {
+      //Adiciona o arquivo selecionado no request...
+      request.files.add(new http.MultipartFile(
+          "herophoto", objFile.readStream, objFile.size,
+          filename: objFile.name));
+      //Faz o request(POST)...
+      var response = await request.send();
+      if (response.statusCode != 200) {
+        ret.success = false;
+        ret.message = response.stream.bytesToString() as String;
+      }
+    } catch (e) {
+      ret.success = false;
+      ret.message =
+          'Falha ao enviar o arquivo. Tente novamente.\n\n' + e.toString();
+    }
+    if (!ret.success) {
+      msgBox(boxContext: context, title: "Ooops...", message: ret.message);
+    }
+    */
+
+  return ret;
+}
+
+///  Lê uma imagem do repositório(AWS S3) e  retorna
+///  o código base64 da mesma, na propriedade [DefFnReturn.data] do
+///  retorno da função.
+///  String fileId - ID do arquivo de imagem
+///
+Future<DefFnReturn> getB64ImgFromRepo({String fileId}) async {
+  //Cria o pacote http multipart request object...
+  DefFnReturn ret = new DefFnReturn();
+
+  //var base64Str = base64Encode(objFile.bytes);
+
+  Map<String, String> headers = {
+    "Access-Control-Allow-Origin": "*",
+    //"Content-type": "application/x-www-form-urlencoded",
+    'Content-type': 'application/json',
+    //"Accept': "application/json"
+  };
+
+  //Fields do POST...
+  Map<String, dynamic> body = {"action": "read", "id": fileId};
+
+  try {
+    //Faz o request(POST)...
+    http.Response response = await http.post(
+      Uri.parse(AppConsts.urlAPIPhoto),
+      headers: headers,
+      body: json.encode(body),
+      encoding: Encoding.getByName('utf-8'),
+    );
+
+    if (response.statusCode != 200) {
+      ret.success = false;
+      ret.message = 'HTTP Fault ' + response.statusCode.toString();
+    } else {
+      //Decodifica o retorno...
+      if (response.body == null || response.body == '') {
+        ret.success = false;
+        ret.message = 'Retorno do request é inválido.';
+      } else {
+        var resp = jsonDecode(response.body);
+        if (!resp['success']) {
+          ret.success = false;
+          ret.message = resp['message'];
+        } else {
+          ret.data = resp['b64'];
+        }
+      }
+    }
+  } catch (e) {
+    ret.success = false;
+    ret.message = e.toString();
+  }
+  //
+  return ret;
 }

@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -10,14 +12,14 @@ import 'package:http/http.dart' as http;
 import '../../functions.dart';
 
 class ImageUploaderWidget extends StatefulWidget {
-  final String imgUrl;
+  final String fileId;
   final String action;
   final void Function(String) onChange;
 
   bool showBtnImgUpdate;
   bool showBtnCancelImgUpdate;
 
-  ImageUploaderWidget({this.imgUrl = "", this.action, this.onChange})
+  ImageUploaderWidget({this.fileId = "", this.action, this.onChange})
       : assert(action == "none" || action == "new" || action == "change") {
     showBtnImgUpdate = this.action != 'none';
     showBtnCancelImgUpdate = false;
@@ -48,40 +50,35 @@ class _ImageUploaderWidgetState extends State<ImageUploaderWidget> {
     }
   }
 
-  void uploadImgFile(BuildContext context) async {
-    //Cria o pacote http multipart request object...
-    var ret = new DefFnReturn();
-
-    final request = http.MultipartRequest(
-      "POST",
-      Uri.parse(AppConsts.urlAPIManut),
-    );
-    //Parâmetros...
-    request.fields["id"] = "herophoto";
-
-    try {
-      //Adiciona o arquivo selecionado no request...
-      request.files.add(new http.MultipartFile(
-          "herophoto", objFile.readStream, objFile.size,
-          filename: objFile.name));
-      //Faz o request(POST)...
-      var response = await request.send();
-      if (response.statusCode != 200) {
-        ret.success = false;
-        ret.message = response.stream.bytesToString() as String;
-      }
-    } catch (e) {
-      ret.success = false;
-      ret.message =
-          'Falha ao enviar o arquivo. Tente novamente.\n\n' + e.toString();
+  DefFnReturn saveImgFile({String fileId}) {
+    DefFnReturn ret = DefFnReturn();
+    if (objFile != null) {
+      ret = putB64ImgToRepo(fileId: fileId, b64: base64Encode(objFile.bytes))
+          as DefFnReturn;
     }
-    if (!ret.success) {
-      msgBox(boxContext: context, title: "Ooops...", message: ret.message);
-    }
+    //
+    return ret;
   }
 
   @override
   Widget build(BuildContext context) {
+    Image loadImgFile({String fileId}) {
+      Image ret = new Image.asset(AppImages.person);
+      if (fileId != '') {
+        DefFnReturn b64 =
+            getB64ImgFromRepo(fileId: widget.fileId) as DefFnReturn;
+        if (!b64.success) {
+          msgBox(title: "Ooops...", message: b64.message, boxContext: context);
+        } else {
+          //Uint8List bytes = BASE64.decode(b64.data);
+          Uint8List bytes = Base64Codec().decode(b64.data);
+          ret = new Image.memory(bytes);
+        }
+      }
+      //
+      return ret;
+    }
+
     return Container(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -97,13 +94,11 @@ class _ImageUploaderWidgetState extends State<ImageUploaderWidget> {
               width: 160,
               height: 140,
               //Image.asset(AppImagese.photoUrl),
-              child: Image.asset(
-                (widget.action == 'insert' && objFile == null)
-                    ? Icons.image_search
-                    : widget.imgUrl,
-                width: 160,
-                height: 140,
-              ),
+              child: (widget.action == 'insert' || objFile == null)
+                  ? loadImgFile(fileId: "")
+                  : loadImgFile(fileId: widget.fileId),
+              //width: 160,
+              //height: 140,
             ),
             if (widget.showBtnImgUpdate)
               ButtonWidget(
@@ -114,8 +109,6 @@ class _ImageUploaderWidgetState extends State<ImageUploaderWidget> {
                   onTap: () {
                     chooseImgFile();
                   }),
-            //MaterialButton(
-            //    child: Text("Alterar"), onPressed: () => chooseImgFile()),
             if (widget.showBtnCancelImgUpdate)
               ButtonWidget(
                   label: "Cancelar",
@@ -123,23 +116,15 @@ class _ImageUploaderWidgetState extends State<ImageUploaderWidget> {
                   height: 38,
                   fontSize: 15,
                   onTap: () {
-                    uploadImgFile(context);
+                    setState(() {});
+                    if (widget.action == 'insert') {
+                      //Recarrega "smith photo"...
+                      loadImgFile(fileId: "");
+                    } else {
+                      //Recarrega photo oficial...
+                      loadImgFile(fileId: widget.fileId);
+                    }
                   }),
-            //MaterialButton(
-            //    child: Text("Cancelar"),
-            //    onPressed: () {
-            //      uploadImgFile(context);
-            //}),
-            //------Show file name when file is selected
-            //if (objFile != null)
-            //  Text("File name : ${objFile.name}"),
-            //------Show file size when file is selected
-            //if (objFile != null)
-            //  Text("File size : ${objFile.size} bytes"),
-            //------Show upload utton when file is selected
-            //MaterialButton(
-            //    child: Text("Upload"),
-            //    onPressed: () => uploadSelectedFile()),
           ],
         ),
       ),
