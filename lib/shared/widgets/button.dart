@@ -60,6 +60,20 @@ class ButtonWidget extends StatelessWidget {
         this.width = width,
         this.height = height;
 
+  ButtonWidget.back(
+      {String label = 'Voltar',
+      VoidCallback onTap,
+      double width = 0.0,
+      double height = 48})
+      : this.backgroundColor = AppColors.darkGreen,
+        this.fontColor = AppColors.white,
+        this.borderColor = AppColors.green,
+        this.onTap = onTap,
+        this.label = label,
+        this.fontSize = 15,
+        this.width = width,
+        this.height = height;
+
   ButtonWidget.insert(
       {String label = 'Incluir',
       VoidCallback onTap,
@@ -74,7 +88,7 @@ class ButtonWidget extends StatelessWidget {
         this.width = width,
         this.height = height;
 
-  ButtonWidget.figth(
+  ButtonWidget.combat(
       {String label = 'Combate',
       VoidCallback onTap,
       double width = 0.0,

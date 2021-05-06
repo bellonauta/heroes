@@ -8,4 +8,6 @@ class AppImages {
   static String get height => "assets/images/height.png";
   static String get speed => "assets/images/speed.png";
   static String get person => "assets/images/person.png";
+  static String get personOpac => "assets/images/person-opac.png";
+  static String get universe => "assets/images/universe.png";
 }

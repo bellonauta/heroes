@@ -13,7 +13,7 @@ import 'package:heroes/functions.dart';
 
 class ImageUploaderWidget extends StatefulWidget {
   final String action;
-  final Uint8List image;  
+  final Uint8List image;
   final void Function(PlatformFile, bool) onChange;
 
   ImageUploaderWidget({Key key, this.image = null, this.action, this.onChange})
@@ -137,15 +137,61 @@ class ImageUploaderWidgetState extends State<ImageUploaderWidget> {
               //padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               width: 160,
               height: 140,
-              child: (widget.action == 'new' && objFile == null && widget.image == null)
-                  ? Image.asset(AppImages.person)
+              child: (widget.action == 'new' &&
+                      objFile == null &&
+                      widget.image == null)
+                  ? Opacity(
+                      opacity: 0.2,
+                      child: Image.asset(
+                        AppImages.person,
+                      ),
+                    )
                   : objFile != null
-                      ? Image.memory(objFile.bytes, width: 160, height: 140,)
-                      : widget.image != null
-                         ? Image.memory(widget.image, width: 160, height: 140,)
-                         : Image.asset(AppImages.person),
-            ), 
+                      ? Container(
+                          //width: MediaQuery.of(context).size.width,
+                          //height: 100,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              fit: BoxFit.fill,
+                              image: Image.memory(
+                                objFile.bytes,
+                                //width: 160,
+                                //height: 140,
+                              ).image,
+                            ),
+                          ),
+                        )
 
+                      /*FittedBox(
+                          child: Image.memory(
+                            objFile.bytes,
+                            width: 160,
+                            height: 140,
+                          ),
+                          fit: BoxFit.fill,
+                        )*/
+                      : widget.image != null
+                          ? Container(
+                              //width: MediaQuery.of(context).size.width,
+                              //height: 100,
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  fit: BoxFit.fill,
+                                  image: Image.memory(
+                                    widget.image,
+                                    //width: 160,
+                                    //height: 140,
+                                  ).image,
+                                ),
+                              ),
+                            )
+                          : Opacity(
+                              opacity: 0.2,
+                              child: Image.asset(
+                                AppImages.person,
+                              ),
+                            ),
+            ),
             if (this.showBtnImgUpdate && widget.action != 'none')
               ButtonWidget(
                   label: "Alterar",

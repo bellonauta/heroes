@@ -1,4 +1,5 @@
 class AppConsts {
+  static final bool localDataBase = false;
   static final String urlBase = "http://localhost/heroes/";
   static final String uploadFolder = 'uploads/'; //Relatibo ao root do site
   static final String photosFolder = uploadFolder + 'photos/';

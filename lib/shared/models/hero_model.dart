@@ -10,6 +10,7 @@ class HeroModel {
   final String altura;
   final String peso;
   final String velocidade;
+  String favorito;
 
   HeroModel(
       {this.id,
@@ -18,7 +19,8 @@ class HeroModel {
       this.universo,
       this.altura,
       this.peso,
-      this.velocidade});
+      this.velocidade,
+      this.favorito});
 
   Map<String, dynamic> toMap() {
     return {
@@ -28,24 +30,10 @@ class HeroModel {
       'altura': altura,
       'peso': peso,
       'velocidade': velocidade,
-      'photo': photo
+      'photo': photo,
+      'favorito': favorito,
     };
   }
 
-  factory HeroModel.fromMap(Map<String, dynamic> map) {
-    return HeroModel(
-      id: map['id']['S'],
-      nome: map['nome']['S'],
-      universo: map['universo']['S'],
-      altura: map['altura']['S'],
-      peso: map['peso']['S'],
-      velocidade: map['velocidade']['S'],
-      photo: base64Decode(map['photo']['S'])
-    );
-  }
-
   String toJson() => json.encode(toMap());
-
-  factory HeroModel.fromJson(String source) =>
-      HeroModel.fromMap(json.decode(source));
 }

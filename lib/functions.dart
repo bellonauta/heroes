@@ -205,49 +205,100 @@ Future<DefFnReturn> getB64ImgFromRepo({String fileId}) async {
 /// Busca a imagem do herói e retorna um [Uint8List] da mesma.
 Future<Image> loadHeroImgFile(
     {String fileId, BuildContext context, Function(Uint8List) onLoad}) async {
-  Image ret = null;  
-  //  
-  if (fileId == '') {     
-     ret = Image.asset(AppImages.person);
-     if (onLoad != null) {
-        onLoad(null);
-     }
-     msgBox(title: "Ooops...", message: 'ID vazio!!??', boxContext: context);     
+  Image ret = null;
+  //
+  if (fileId == '') {
+    ret = Image.asset(AppImages.person);
+    if (onLoad != null) {
+      onLoad(null);
+    }
+    msgBox(title: "Ooops...", message: 'ID vazio!!??', boxContext: context);
   } else {
     var res = await getB64ImgFromRepo(fileId: fileId);
     if (!res.success) {
-       ret = Image.asset(AppImages.person);
-       msgBox(title: "Ooops...", message: res.message, boxContext: context);
+      ret = Image.asset(AppImages.person);
+      msgBox(title: "Ooops...", message: res.message, boxContext: context);
     } else if (res.data == '') {
       ret = Image.asset(AppImages.person);
       msgBox(
-           title: "Ooops...",
-            message: 'Imagem não encontrada.',
-            boxContext: context);
-    }     
+          title: "Ooops...",
+          message: 'Imagem não encontrada.',
+          boxContext: context);
+    }
     if (ret == null && onLoad != null) {
-       onLoad(null);
+      onLoad(null);
     } else {
-        //Uint8List bytes = BASE64.decode(b64.data);
-        //Uint8List bytes = Base64Codec().decode(res.data);
-        Uint8List bytes = base64Decode(res.data);
-        if (onLoad != null) {
-          onLoad(bytes);
-        }
-        //Uint8List bytes = Base64Decoder().convert(
-        //    'TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb2');
-        //var bytes = base64.decode(
-        //    'TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb2');
-        ret = Image.memory(bytes,
-                    width: 200,
-                    height: 200,
-                    cacheHeight: 200,
-                    cacheWidth: 200,
-                    fit: BoxFit.fitWidth,
-                    filterQuality: FilterQuality.low);
-        msgBox(title: "Ok", message: "Imagem recuperada.", boxContext: context);
+      //Uint8List bytes = BASE64.decode(b64.data);
+      //Uint8List bytes = Base64Codec().decode(res.data);
+      Uint8List bytes = base64Decode(res.data);
+      if (onLoad != null) {
+        onLoad(bytes);
+      }
+      //Uint8List bytes = Base64Decoder().convert(
+      //    'TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb2');
+      //var bytes = base64.decode(
+      //    'TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb2');
+      ret = Image.memory(bytes,
+          width: 200,
+          height: 200,
+          cacheHeight: 200,
+          cacheWidth: 200,
+          fit: BoxFit.fitWidth,
+          filterQuality: FilterQuality.low);
+      msgBox(title: "Ok", message: "Imagem recuperada.", boxContext: context);
     }
   }
   //
   return ret;
+}
+
+void postManut(
+    {BuildContext context,
+    Map<String, dynamic> body,
+    Function(bool, String, String) onAfterPost}) async {
+  //Cria o pacote http multipart request object...
+  DefFnReturn ret = new DefFnReturn();
+
+  Map<String, String> headers = {
+    "Access-Control-Allow-Origin": "*",
+    //"Content-type": "application/x-www-form-urlencoded",
+    'Content-type': 'application/json',
+    //"Accept': "application/json"
+  };
+
+  try {
+    //Faz o request(POST)...
+    http.Response response = await http.post(
+      Uri.parse(AppConsts.urlAPIManut),
+      headers: headers,
+      body: json.encode(body),
+      encoding: Encoding.getByName('utf-8'),
+    );
+
+    if (response.statusCode != 200) {
+      ret.success = false;
+      ret.message = 'HTTP Fault ' + response.statusCode.toString();
+    } else {
+      //Decodifica o retorno...
+      if (response.body == null || response.body == '') {
+        ret.success = false;
+        ret.message = 'Retorno do request é inválido.';
+      } else {
+        var resp = jsonDecode(response.body);
+        if (!resp['success']) {
+          ret.success = false;
+          ret.message = resp['message'];
+        } else {
+          ret.data = resp['id'];
+        }
+      }
+    }
+  } catch (e) {
+    ret.success = false;
+    ret.message = e.toString();
+  }
+  //
+  if (onAfterPost != null) {
+    onAfterPost(ret.success, ret.message, ret.data);
+  }
 }

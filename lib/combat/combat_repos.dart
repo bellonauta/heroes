@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
 import 'package:heroes/core/app_consts.dart';
 import 'package:heroes/core/app_images.dart';
 import 'package:heroes/shared/models/hero_model.dart';
@@ -10,14 +8,14 @@ import 'package:http/http.dart' as http;
 
 import '../functions.dart';
 
-class HomeRepos {
+class CombatRepos {
   //Future<HeroModel> getHero() async {
   //final response = await rootBundle.loadString("database/hero.json");
   //final user = HeroModel.fromJson(response);
   //return user;
   //}
 
-  Future<List<HeroModel>> getHeroes() async {
+  Future<List<HeroModel>> getHeroes({bool favoritos = false}) async {
     //final response = await rootBundle.loadString("database/quizzes.json");
     var ret = new DefFnReturn();
 
@@ -31,7 +29,10 @@ class HomeRepos {
     };
 
     //Fields do POST...
-    Map<String, dynamic> body = {"key": "WILSON"};
+    Map<String, dynamic> body = {
+      "key": "WILSON",
+      "favoritos": favoritos ? "S" : "N"
+    };
 
     try {
       //Faz o request dos heróis...
@@ -58,12 +59,14 @@ class HomeRepos {
           } else {
             //if (false) {
             var list = resp['heroes'] as List;
+
             if (AppConsts.localDataBase) {
               heroes = [
                 HeroModel(
                     id: 'adlajldf',
                     nome: 'Batman',
-                    photo: null, //await File(AppImages.photo).readAsBytes(),
+                    photo:
+                        null, //await new File(AppImages.photo).readAsBytes(),
                     universo: 'Marvel',
                     altura: '1.90',
                     peso: '80',
@@ -72,7 +75,7 @@ class HomeRepos {
                 HeroModel(
                     id: 'adlajldfdfadfas',
                     nome: 'Robin',
-                    photo: null, // File(AppImages.photo).readAsBytes(),
+                    photo: null, // new File(AppImages.trophy).readAsBytes(),
                     universo: 'Marvel',
                     altura: '1.87',
                     peso: '75',
@@ -81,15 +84,27 @@ class HomeRepos {
               ];
             } else {
               heroes = list.map((i) {
-                return HeroModel(
-                    id: i['id']['S'],
-                    nome: i['nome']['S'],
-                    photo: base64Decode(i['photo']['S']),
-                    universo: i['universo']['S'],
-                    altura: i['altura']['S'],
-                    peso: i['peso']['S'],
-                    velocidade: i['velocidade']['S'],
-                    favorito: i['favorito']['S']);
+                if (!favoritos) {
+                  return HeroModel(
+                      id: i['id']['S'],
+                      nome: i['nome']['S'],
+                      photo: base64Decode(i['photo']['S']),
+                      universo: i['universo']['S'],
+                      altura: i['altura']['S'],
+                      peso: i['peso']['S'],
+                      velocidade: i['velocidade']['S'],
+                      favorito: i['favorito']['S']);
+                } else {
+                  return HeroModel(
+                      id: i['id'],
+                      nome: i['nome'],
+                      photo: base64Decode(i['photo']),
+                      universo: i['universo'],
+                      altura: i['altura'],
+                      peso: i['peso'],
+                      velocidade: i['velocidade'],
+                      favorito: i['favorito']);
+                }
               }).toList();
             }
           }
