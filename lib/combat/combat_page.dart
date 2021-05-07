@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'dart:typed_data';
+import 'dart:js';
 
 import 'package:flutter/cupertino.dart';
 import 'package:heroes/core/app_colors.dart';
@@ -10,10 +11,12 @@ import 'package:heroes/functions.dart';
 import 'package:heroes/combat/combat_controller.dart';
 import 'package:heroes/home/home_page.dart';
 import 'package:heroes/manut/heromanut_page.dart';
+import 'package:heroes/shared/models/hero_model.dart';
 import 'package:heroes/shared/widgets/appbar.dart';
 import 'package:heroes/shared/widgets/button.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:heroes/dartjs.dart';
 
 import 'combat_state.dart';
 
@@ -30,10 +33,7 @@ class _CombatPageState extends State<CombatPage> {
 
   List<bool> isFavorited = [false, true];
 
-  Map<String, dynamic> _images = {
-    "left": AppImages.person,
-    "right": AppImages.person
-  };
+  Map<String, HeroModel> _fighters = {"left": null, "right": null};
 
   @override
   void initState() {
@@ -117,12 +117,17 @@ class _CombatPageState extends State<CombatPage> {
                                                           'Clique duas vezes para selecionar.',
                                                       child: GestureDetector(
                                                           onDoubleTap: () {
-                                                            if (e.photo ==
-                                                                    _images[
-                                                                        'left'] ??
-                                                                e.photo ==
-                                                                    _images[
-                                                                        'right']) {
+                                                            if ((e ==
+                                                                        _fighters[
+                                                                            'left'] ||
+                                                                    e ==
+                                                                        _fighters[
+                                                                            'right']) &&
+                                                                (_fighters['left'] ==
+                                                                        null ||
+                                                                    _fighters[
+                                                                            'right'] ==
+                                                                        null)) {
                                                               msgBox(
                                                                   title:
                                                                       "Ooops...",
@@ -131,31 +136,25 @@ class _CombatPageState extends State<CombatPage> {
                                                                   boxContext:
                                                                       context);
                                                             } else if (_selectedCombatant
-                                                                    .value ==
-                                                                0) {
-                                                              this._images[
-                                                                  'left'] = e
-                                                                          .photo
-                                                                      is Uint8List
-                                                                  ? e.photo
-                                                                  : AppImages
-                                                                      .person;
-                                                              this._images[
+                                                                        .value ==
+                                                                    0 ||
+                                                                (_fighters['left'] !=
+                                                                        null &&
+                                                                    _fighters[
+                                                                            'right'] !=
+                                                                        null)) {
+                                                              this._fighters[
+                                                                  'left'] = e;
+                                                              this._fighters[
                                                                       'right'] =
-                                                                  AppImages
-                                                                      .person;
+                                                                  null;
                                                               _selectedCombatant
                                                                   .value = 1;
                                                             } else if (_selectedCombatant
                                                                     .value ==
                                                                 1) {
-                                                              this._images[
-                                                                  'right'] = e
-                                                                          .photo
-                                                                      is Uint8List
-                                                                  ? e.photo
-                                                                  : AppImages
-                                                                      .person;
+                                                              this._fighters[
+                                                                  'right'] = e;
                                                               _selectedCombatant
                                                                   .value = 0;
                                                             }
@@ -240,8 +239,8 @@ class _CombatPageState extends State<CombatPage> {
                                                 Icons.favorite_border_rounded)),
                                       ],
                                       isSelected: isFavorited,
-                                      borderColor: Colors.lightBlue,
-                                      disabledBorderColor: Colors.lightBlue,
+                                      borderColor: Colors.blueAccent,
+                                      disabledBorderColor: Colors.blueAccent,
                                       selectedBorderColor: Colors.lightBlue,
                                       borderWidth: 4,
                                       borderRadius: BorderRadius.only(
@@ -249,20 +248,23 @@ class _CombatPageState extends State<CombatPage> {
                                           bottomRight: Radius.circular(25)),
                                       onPressed: (int index) {
                                         setState(() {
-                                          for (int buttonIndex = 0;
-                                              buttonIndex < isFavorited.length;
-                                              buttonIndex++) {
-                                            if (buttonIndex == index) {
-                                              isFavorited[buttonIndex] = true;
-                                            } else {
-                                              isFavorited[buttonIndex] = false;
+                                          if (isFavorited[index] == false) {
+                                            for (int buttonIndex = 0;
+                                                buttonIndex <
+                                                    isFavorited.length;
+                                                buttonIndex++) {
+                                              if (buttonIndex == index) {
+                                                isFavorited[buttonIndex] = true;
+                                              } else {
+                                                isFavorited[buttonIndex] =
+                                                    false;
+                                              }
                                             }
                                             if (index == 0) {
                                               controller.getFavoriteHeroes();
                                             } else {
                                               controller.getHeroes();
                                             }
-                                            //setState(() {});
                                           }
                                         });
                                       })),
@@ -295,11 +297,12 @@ class _CombatPageState extends State<CombatPage> {
                                   decoration: BoxDecoration(
                                     image: DecorationImage(
                                         fit: BoxFit.fill,
-                                        image: _images['left'] is Uint8List
-                                            ? Image.memory(_images['left']
-                                                    as Uint8List)
+                                        image: (_fighters['left'] != null &&
+                                                _fighters['left'].photo != null)
+                                            ? Image.memory(
+                                                    _fighters['left'].photo)
                                                 .image
-                                            : Image.asset(_images['left'])
+                                            : Image.asset(AppImages.person)
                                                 .image),
                                   ),
                                 ),
@@ -316,11 +319,13 @@ class _CombatPageState extends State<CombatPage> {
                                   decoration: BoxDecoration(
                                     image: DecorationImage(
                                         fit: BoxFit.fill,
-                                        image: _images['right'] is Uint8List
-                                            ? Image.memory(_images['right']
-                                                    as Uint8List)
+                                        image: (_fighters['right'] != null &&
+                                                _fighters['right'].photo !=
+                                                    null)
+                                            ? Image.memory(
+                                                    _fighters['right'].photo)
                                                 .image
-                                            : Image.asset(_images['right'])
+                                            : Image.asset(AppImages.person)
                                                 .image),
                                   ),
                                 ),
@@ -360,7 +365,53 @@ class _CombatPageState extends State<CombatPage> {
                           controller.heroes.length > 0
                               ? Container(
                                   width: 150,
-                                  child: ButtonWidget.combat(onTap: () {}))
+                                  child: ButtonWidget.combat(onTap: () {
+                                    int w = winner(
+                                        double.tryParse(_fighters['left'].peso),
+                                        double.tryParse(
+                                            _fighters['left'].altura),
+                                        double.tryParse(
+                                            _fighters['left'].velocidade),
+                                        _fighters['left'].favorito == 'S',
+                                        double.tryParse(
+                                            _fighters['right'].peso),
+                                        double.tryParse(
+                                            _fighters['right'].altura),
+                                        double.tryParse(
+                                            _fighters['right'].velocidade),
+                                        _fighters['right'].favorito == 'S');
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: Text("E o vencedor é..."),
+                                          content: Container(
+                                              alignment: Alignment.center,
+                                              width: 90,
+                                              height: 94,
+                                              decoration: BoxDecoration(
+                                                  image: DecorationImage(
+                                                image: Image.memory(
+                                                  w == 1
+                                                      ? _fighters['left'].photo
+                                                      : _fighters['right']
+                                                          .photo,
+                                                  //width: 90,
+                                                  //height: 94,
+                                                ).image,
+                                              ))),
+                                          actions: [
+                                            TextButton(
+                                              child: Text("OK"),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  }))
                               : Container(height: 0.0, width: 0.0)
                         ])),
               ),
